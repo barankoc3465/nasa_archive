@@ -11,3 +11,5 @@ features/ # Uygulamanın ana özellikleri
 apod/ # Günün Astronomi Görseli özelliği (UI, Bloc/Provider, Model)
 mars_rovers/ # Mars fotoğrafları özelliği
 main.dart # Uygulama başlangıç noktası
+
+flutter pub add dio cached_network_image provider
