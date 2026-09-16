@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NASA Uzay Yolu</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>NASA Uzay Yolu</h1>
+      <p class="subtitle">Uzay görselleri ve yıldız konumu verileri</p>
+
+      <section class="panel">
+        <h2>NASA API Anahtarı</h2>
+        <div class="row">
+          <input id="apiKey" type="text" value="DEMO_KEY" aria-label="NASA API anahtarı" />
+          <button id="loadDataButton" type="button">Verileri Yükle</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Günün Görseli (APOD)</h2>
+        <div id="apodStatus" class="status">Yükleniyor...</div>
+        <article id="apodContent" class="hidden">
+          <h3 id="apodTitle"></h3>
+          <img id="apodImage" alt="NASA APOD görseli" />
+          <p id="apodExplanation"></p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Yıldız Konumu Verileri</h2>
+        <div id="starsStatus" class="status">Yükleniyor...</div>
+        <div class="tableWrap">
+          <table id="starsTable" class="hidden">
+            <thead>
+              <tr>
+                <th>Yıldız</th>
+                <th>Sağ Açıklık (RA)</th>
+                <th>Dik Açıklık (Dec)</th>
+                <th>Uzaklık (parsek)</th>
+              </tr>
+            </thead>
+            <tbody id="starsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
