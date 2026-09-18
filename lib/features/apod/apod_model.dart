@@ -2,8 +2,6 @@ class ApodModel {
   final String title;
   final String explanation;
   final String url;
-
-  // YENİ EKLENENLER:
   final String?
   hdurl; // Yüksek çözünürlüklü link (Bazen null gelebilir, o yüzden String?)
   final String mediaType; // Fotoğraf mı, video mu? ('image' veya 'video')

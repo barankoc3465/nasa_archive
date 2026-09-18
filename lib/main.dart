@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nasa_uzay_yolu/screens/apod_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:nasa_uzay_yolu/screens/main_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   runApp(const NasaApp());
 }
 
@@ -14,7 +17,7 @@ class NasaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Uzay Fotoğrafları',
       theme: ThemeData.dark(), // Koyu tema uzay konseptine çok yakışır
-      home: const ApodScreen(), // Uygulama direkt bu ekranla başlayacak
+      home: const MainScreen(), // Uygulama direkt bu ekranla başlayacak
     );
   }
 }

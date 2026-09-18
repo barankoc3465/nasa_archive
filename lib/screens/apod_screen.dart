@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nasa_uzay_yolu/core/api/nasa_api_service.dart';
+import 'package:nasa_uzay_yolu/api/nasa_api_service.dart';
 import 'package:nasa_uzay_yolu/features/apod/apod_model.dart';
-
-// Kendi proje adına göre import yollarını güncellemelisin:
-// import 'package:senin_proje_adin/core/api/nasa_api_service.dart';
-// import 'package:senin_proje_adin/features/apod/apod_model.dart';
 
 class ApodScreen extends StatefulWidget {
   const ApodScreen({super.key});
@@ -30,6 +26,8 @@ class _ApodScreenState extends State<ApodScreen> {
   Future<void> _fetchData() async {
     final service = NasaApiService();
     final data = await service.fetchApod();
+
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false; // Garson geri döndü (Yükleme bitti)
