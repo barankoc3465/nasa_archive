@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
@@ -142,7 +143,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Evren Galerisi'),
+        title: const Text('Nasa Universe Galery'),
         backgroundColor: Colors.black,
       ),
       body: Column(
@@ -213,19 +214,16 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
             borderRadius: BorderRadius.circular(12),
             child: Hero(
               tag: image.id,
-              child: Image.network(
-                image.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: image.imageUrl,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: CircularProgressIndicator(color: Colors.orange),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) => Container(
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[900],
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.orange),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
                   color: Colors.grey[900],
                   child: const Icon(
                     Icons.broken_image_outlined,
@@ -273,20 +271,26 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                       maxScale: 4,
                       child: Hero(
                         tag: image.id,
-                        child: Image.network(
-                          image.imageUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: image.imageUrl,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.broken_image_outlined,
-                                color: Colors.white54,
-                                size: 48,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[900],
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.orange,
                               ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.white54,
+                            size: 48,
+                          ),
                         ),
                       ),
                     ),
                   ),
-
                   // Başlık + tarih + açıklama
                   Flexible(
                     child: SingleChildScrollView(
@@ -346,7 +350,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                               size: 18,
                             ),
                             label: const Text(
-                              'Paylaş',
+                              'Share',
                               style: TextStyle(color: Colors.orange),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -386,7 +390,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                                     size: 18,
                                   ),
                             label: Text(
-                              isDownloading ? 'İndiriliyor...' : 'İndir',
+                              isDownloading ? 'Downloading...' : 'Download',
                               style: const TextStyle(color: Colors.black),
                             ),
                             style: ElevatedButton.styleFrom(

@@ -42,11 +42,11 @@ class _MainScreenState extends State<MainScreen> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.star), // Yıldız ikonu
-            label: 'Günün Görseli',
+            label: 'Picture of the Day', // Günün Astronomi Görseli
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.explore), // Keşif/Pusula ikonu
-            label: 'Evren Galerisi',
+            label: 'Nasa Universe Galery',
           ),
         ],
       ),
