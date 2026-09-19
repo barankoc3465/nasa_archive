@@ -62,10 +62,11 @@ class NasaApiService {
   /// NASA Uzay ve Görsel Kütüphanesinde arama yapar
   Future<List<SpaceImage>> searchSpaceImages(
     String query, {
+    int page = 1,
     int pageSize = 24,
     bool forceRefresh = false,
   }) async {
-    final cacheKey = '${query.trim().toLowerCase()}::$pageSize';
+    final cacheKey = '${query.trim().toLowerCase()}::$page::$pageSize';
     final cached = _imageCache[cacheKey];
     if (!forceRefresh &&
         cached != null &&
@@ -80,6 +81,7 @@ class NasaApiService {
         queryParameters: {
           'q': query,
           'media_type': 'image',
+          'page': page,
           'page_size': pageSize,
         },
       );

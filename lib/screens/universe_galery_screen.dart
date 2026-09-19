@@ -26,6 +26,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   String? _errorMessage;
   String _currentQuery = 'galaxy';
   int _requestVersion = 0;
+  int _currentPage = 1;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   final List<Map<String, String>> _categories = [
     {'label': 'Galaxy', 'query': 'galaxy'},
     {'label': 'Nebula', 'query': 'nebula'},
@@ -60,18 +63,47 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       _errorMessage = null;
       _currentQuery = query;
       _images = [];
+      _currentPage = 1;
+      _isLoadingMore = false;
+      _hasMore = true;
     });
 
-    final images = await _apiService.searchSpaceImages(query);
+    final images = await _apiService.searchSpaceImages(query, page: 1);
 
     if (!mounted || requestVersion != _requestVersion) return;
 
     setState(() {
       _images = images;
       _isLoading = false;
+      _hasMore = images.length >= 24;
       _errorMessage = images.isEmpty
           ? 'Bu kategoride fotoğraf bulunamadı.'
           : null;
+    });
+  }
+
+  Future<void> _loadMoreImages() async {
+    if (_isLoadingMore || !_hasMore || _isLoading) return;
+
+    final requestVersion = _requestVersion;
+    setState(() => _isLoadingMore = true);
+    final nextPage = _currentPage + 1;
+    final images = await _apiService.searchSpaceImages(
+      _currentQuery,
+      page: nextPage,
+    );
+
+    if (!mounted || requestVersion != _requestVersion) return;
+
+    setState(() {
+      _isLoadingMore = false;
+      if (images.isEmpty) {
+        _hasMore = false;
+      } else {
+        _images = [..._images, ...images];
+        _currentPage = nextPage;
+        _hasMore = images.length >= 24;
+      }
     });
   }
 
@@ -222,47 +254,76 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: _images.length,
-      itemBuilder: (context, index) {
-        final image = _images[index];
-        return GestureDetector(
-          onTap: () => _showImageDetails(image),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Hero(
-              tag: image.id,
-              child: CachedNetworkImage(
-                imageUrl: image.imageUrl,
-                cacheKey: image.id,
-                memCacheWidth: 540,
-                maxWidthDiskCache: 540,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: AppColors.panel,
-                  child: const Center(
-                    child: CircularProgressIndicator(color: AppColors.cream),
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(8),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final image = _images[index];
+              return GestureDetector(
+                onTap: () => _showImageDetails(image),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Hero(
+                    tag: image.id,
+                    child: CachedNetworkImage(
+                      imageUrl: image.imageUrl,
+                      cacheKey: image.id,
+                      memCacheWidth: 540,
+                      maxWidthDiskCache: 540,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.panel,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.cream,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.panel,
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          color: AppColors.mutedText,
+                          size: 40,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.panel,
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    color: AppColors.mutedText,
-                    size: 40,
+              );
+            }, childCount: _images.length),
+          ),
+        ),
+        if (_hasMore)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoadingMore ? null : _loadMoreImages,
+                  icon: _isLoadingMore
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.expand_more),
+                  label: Text(
+                    _isLoadingMore ? 'Loading...' : 'Load more images',
                   ),
                 ),
               ),
             ),
           ),
-        );
-      },
+      ],
     );
   }
 
