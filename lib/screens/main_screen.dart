@@ -23,14 +23,28 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Body kısmına, listedeki seçili index'e denk gelen ekranı veriyoruz
-      body: _screens[_currentIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 450),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.98, end: 1).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
+      ),
 
       // Alt Menü Bölümü
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        backgroundColor: Colors.black, // Uzay teması
-        selectedItemColor: Colors.blueAccent, // Seçili ikon rengi
-        unselectedItemColor: Colors.grey, // Seçili olmayan ikon rengi
         // Kullanıcı bir sekmeye tıkladığında ne olacak?
         onTap: (index) {
           setState(() {

@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:nasa_uzay_yolu/api/nasa_api_service.dart';
+import 'package:nasa_uzay_yolu/core/theme/app_theme.dart';
 import 'package:nasa_uzay_yolu/features/space/space_images_model.dart';
 
 class SpaceGalleryScreen extends StatefulWidget {
@@ -29,10 +30,19 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
     {'label': 'Nebula', 'query': 'nebula'},
     {'label': 'Jüpiter', 'query': 'jupiter'},
     {'label': 'Satürn', 'query': 'saturn'},
-    {'label': 'Mars', 'query': 'mars'},
+    {'label': 'Uranüs', 'query': 'uranus'},
+    {'label': 'Neptün', 'query': 'neptune'},
     {'label': 'Ay', 'query': 'moon'},
     {'label': 'Güneş', 'query': 'sun'},
-    {'label': 'Yıldızlar', 'query': 'stars'},
+    {'label': 'Yıldız', 'query': 'star'},
+    {'label': 'Gezegen', 'query': 'planet'},
+    {'label': 'Asteroit', 'query': 'asteroid'},
+    {'label': 'Kuyruklu Yıldız', 'query': 'comet'},
+    {'label': 'Uzay Mekiği', 'query': 'space shuttle'},
+    {
+      'label': 'Uluslararası Uzay İstasyonu',
+      'query': 'international space station',
+    },
     {'label': 'Kara Delik', 'query': 'black hole'},
   ];
 
@@ -124,7 +134,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Görsel galeriye kaydedildi ✓'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.magenta,
         ),
       );
     } catch (e) {
@@ -132,7 +142,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('İndirme başarısız: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.coral,
         ),
       );
     }
@@ -141,43 +151,51 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.ink,
       appBar: AppBar(
         title: const Text('Nasa Universe Galery'),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = cat['query'] == _currentQuery;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 8,
-                  ),
-                  child: ChoiceChip(
-                    label: Text(cat['label']!),
-                    selected: isSelected,
-                    onSelected: (_) => _fetchImages(cat['query']!),
-                    backgroundColor: Colors.grey[900],
-                    selectedColor: Colors.orange,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.black : Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _currentQuery == 'galaxy'
+                ? const [AppColors.deepViolet, AppColors.ink]
+                : const [AppColors.magenta, AppColors.deepViolet],
           ),
-          Expanded(child: _buildContent()),
-        ],
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final cat = _categories[index];
+                  final isSelected = cat['query'] == _currentQuery;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
+                    child: ChoiceChip(
+                      label: Text(cat['label']!),
+                      selected: isSelected,
+                      onSelected: (_) => _fetchImages(cat['query']!),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Expanded(child: _buildContent()),
+          ],
+        ),
       ),
     );
   }
@@ -185,7 +203,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   Widget _buildContent() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.orange),
+        child: CircularProgressIndicator(color: AppColors.cream),
       );
     }
 
@@ -193,7 +211,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       return Center(
         child: Text(
           _errorMessage!,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.mutedText),
         ),
       );
     }
@@ -218,16 +236,16 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                 imageUrl: image.imageUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
-                  color: Colors.grey[900],
+                  color: AppColors.panel,
                   child: const Center(
-                    child: CircularProgressIndicator(color: Colors.orange),
+                    child: CircularProgressIndicator(color: AppColors.cream),
                   ),
                 ),
                 errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[900],
+                  color: AppColors.panel,
                   child: const Icon(
                     Icons.broken_image_outlined,
-                    color: Colors.white54,
+                    color: AppColors.mutedText,
                     size: 40,
                   ),
                 ),
@@ -242,14 +260,14 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   void _showImageDetails(SpaceImage image) {
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: AppColors.ink.withValues(alpha: 0.9),
       builder: (dialogContext) {
         bool isDownloading = false; // Popup içi state
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return Dialog(
-              backgroundColor: Colors.grey[900],
+              backgroundColor: AppColors.panel,
               insetPadding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -259,7 +277,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                     alignment: Alignment.topRight,
                     child: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(Icons.close, color: AppColors.pale),
                     ),
                   ),
 
@@ -275,16 +293,16 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                           imageUrl: image.imageUrl,
                           fit: BoxFit.contain,
                           placeholder: (context, url) => Container(
-                            color: Colors.grey[900],
+                            color: AppColors.panel,
                             child: const Center(
                               child: CircularProgressIndicator(
-                                color: Colors.orange,
+                                color: AppColors.cream,
                               ),
                             ),
                           ),
                           errorWidget: (context, url, error) => const Icon(
                             Icons.broken_image_outlined,
-                            color: Colors.white54,
+                            color: AppColors.mutedText,
                             size: 48,
                           ),
                         ),
@@ -301,7 +319,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                           Text(
                             image.title,
                             style: const TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.peach,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -310,7 +328,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                             const SizedBox(height: 8),
                             Text(
                               image.dateCreated,
-                              style: const TextStyle(color: Colors.white60),
+                              style: const TextStyle(
+                                color: AppColors.mutedText,
+                              ),
                             ),
                           ],
                           const SizedBox(height: 12),
@@ -318,16 +338,16 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                             onOpen: (link) => _launchUrl(link.url),
                             text: image.description,
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: AppColors.mutedText,
                               fontSize: 15,
                               height: 1.4,
                             ),
                             linkStyle: const TextStyle(
-                              color: Colors.lightBlueAccent,
+                              color: AppColors.coral,
                               fontSize: 15,
                               height: 1.4,
                               decoration: TextDecoration.underline,
-                              decorationColor: Colors.lightBlueAccent,
+                              decorationColor: AppColors.coral,
                             ),
                           ),
                         ],
@@ -344,19 +364,8 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _shareImage(image),
-                            icon: const Icon(
-                              Icons.share,
-                              color: Colors.orange,
-                              size: 18,
-                            ),
-                            label: const Text(
-                              'Share',
-                              style: TextStyle(color: Colors.orange),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.orange),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
+                            icon: const Icon(Icons.share, size: 18),
+                            label: const Text('Share'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -381,21 +390,11 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.black,
                                     ),
                                   )
-                                : const Icon(
-                                    Icons.download,
-                                    color: Colors.black,
-                                    size: 18,
-                                  ),
+                                : const Icon(Icons.download, size: 18),
                             label: Text(
                               isDownloading ? 'Downloading...' : 'Download',
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),

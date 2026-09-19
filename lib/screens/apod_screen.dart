@@ -5,10 +5,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:gal/gal.dart';
+import 'package:nasa_uzay_yolu/api/nasa_api_service.dart';
+import 'package:nasa_uzay_yolu/core/theme/app_theme.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:nasa_uzay_yolu/api/nasa_api_service.dart';
 import 'package:nasa_uzay_yolu/features/apod/apod_model.dart';
 
 class ApodScreen extends StatefulWidget {
@@ -19,39 +20,37 @@ class ApodScreen extends StatefulWidget {
 }
 
 class _ApodScreenState extends State<ApodScreen> {
+  final NasaApiService _apiService = NasaApiService();
   ApodModel? _apodData;
   bool _isLoading = true;
-  String _errorMessage = '';
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _loadApodData();
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _loadApodData() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
+      _errorMessage = null;
     });
 
-    final service = NasaApiService();
-    final data = await service.fetchApod();
+    final apod = await _apiService.fetchApod();
 
     if (!mounted) return;
 
     setState(() {
       _isLoading = false;
-      if (data != null) {
-        _apodData = data;
+      if (apod != null) {
+        _apodData = apod;
       } else {
-        _errorMessage =
-            "Uzayla iletişim kurulamadı. İnternetinizi kontrol edin.";
+        _errorMessage = 'Günün astronomi görseli yüklenemedi.';
       }
     });
   }
 
-  // --- URL açma yardımcısı ---
   Future<void> _launchUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
@@ -64,11 +63,10 @@ class _ApodScreenState extends State<ApodScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Bağlantı açılamadı: $e')));
+          .showSnackBar(SnackBar(content: Text('Hata: $e')));
     }
   }
 
-  // --- Görseli paylaş (metin + URL) ---
   Future<void> _shareImage(ApodModel apod) async {
     try {
       await Share.share(
@@ -82,7 +80,6 @@ class _ApodScreenState extends State<ApodScreen> {
     }
   }
 
-  // --- Görseli galeriye indir ---
   Future<void> _downloadImage(ApodModel apod) async {
     try {
       if (!await Gal.hasAccess()) {
@@ -90,31 +87,29 @@ class _ApodScreenState extends State<ApodScreen> {
       }
 
       final tempDir = await getTemporaryDirectory();
-      final ext = apod.url.toLowerCase().contains('.png') ? 'png' : 'jpg';
-      final fileName = 'apod_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      final filePath = '${tempDir.path}/$fileName';
+      final extension = apod.url.toLowerCase().contains('.png') ? 'png' : 'jpg';
+      final filePath =
+          '${tempDir.path}/apod_${DateTime.now().millisecondsSinceEpoch}.$extension';
 
-      final dio = Dio();
-      await dio.download(apod.url, filePath);
-
+      await Dio().download(apod.url, filePath);
       await Gal.putImage(filePath, album: 'NASA Uzay Galerisi');
 
-      final f = File(filePath);
-      if (await f.exists()) await f.delete();
+      final file = File(filePath);
+      if (await file.exists()) await file.delete();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Görsel galeriye kaydedildi ✓'),
-          backgroundColor: Colors.green,
+          content: Text('Görsel galeriye kaydedildi'),
+          backgroundColor: AppColors.magenta,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(' İndirme başarısız: $e'),
-          backgroundColor: Colors.red,
+          content: Text('İndirme başarısız: $e'),
+          backgroundColor: AppColors.coral,
         ),
       );
     }
@@ -123,145 +118,176 @@ class _ApodScreenState extends State<ApodScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.ink,
       appBar: AppBar(
-        title: const Text('Astronomy Picture of the Day'),
+        title: const Text(
+          'Astronomy Picture of the Day',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : _errorMessage.isNotEmpty
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.cream),
+            )
+          : _errorMessage != null
           ? Center(
-              child: Text(
-                _errorMessage,
-                style: const TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.coral,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppColors.mutedText),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _loadApodData,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Tekrar Dene'),
+                  ),
+                ],
               ),
             )
-          : _buildSuccessUI(),
+          : _buildContent(_apodData!),
     );
   }
 
-  Widget _buildSuccessUI() {
-    final apod = _apodData!;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // --- Görsel (önbellekli) ---
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: apod.url,
-              width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const SizedBox(
-                height: 300,
-                child: Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
+  Widget _buildContent(ApodModel apod) {
+    return RefreshIndicator(
+      onRefresh: _loadApodData,
+      color: AppColors.cream,
+      backgroundColor: AppColors.panel,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Görsel Kartı
+            Card(
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              errorWidget: (context, url, error) => Container(
-                height: 300,
-                color: Colors.grey[900],
-                child: const Center(
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: Colors.white54,
-                    size: 48,
+              color: AppColors.panel,
+              child: Column(
+                children: [
+                  InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 3.0,
+                    child: CachedNetworkImage(
+                      imageUrl: apod.url,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        height: 280,
+                        color: AppColors.panel,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.cream,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        height: 280,
+                        color: AppColors.panel,
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          color: AppColors.mutedText,
+                          size: 48,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 16),
 
-          // --- Başlık + Açıklama ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  apod.title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Açıklama — linkler tıklanabilir
-                Linkify(
-                  onOpen: (link) => _launchUrl(link.url),
-                  text: apod.explanation,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    height: 1.5,
-                  ),
-                  linkStyle: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.lightBlueAccent,
-                    height: 1.5,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Colors.lightBlueAccent,
-                  ),
-                ),
-              ],
+            // Başlık & Tarih
+            Text(
+              apod.title,
+              style: const TextStyle(
+                color: AppColors.pale,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-
-          // --- Aksiyon Butonları ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Row(
-              children: [
-                // Paylaş
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _shareImage(apod),
-                    icon: const Icon(
-                      Icons.share,
-                      color: Colors.orange,
-                      size: 18,
-                    ),
-                    label: const Text(
-                      'Share',
-                      style: TextStyle(color: Colors.orange),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.orange),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+            if (apod.date.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_rounded,
+                    size: 14,
+                    color: AppColors.peach,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    apod.date,
+                    style: const TextStyle(
+                      color: AppColors.mutedText,
+                      fontSize: 13,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
 
-                // İndir
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _downloadImage(apod),
-                    icon: const Icon(
-                      Icons.download,
-                      color: Colors.black,
-                      size: 18,
-                    ),
-                    label: const Text(
-                      'Download',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ],
+            // Açıklama Metni
+            Linkify(
+              onOpen: (link) => _launchUrl(link.url),
+              text: apod.explanation,
+              style: const TextStyle(
+                color: AppColors.mutedText,
+                fontSize: 15,
+                height: 1.5,
+              ),
+              linkStyle: const TextStyle(
+                color: AppColors.coral,
+                decoration: TextDecoration.underline,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // Aksiyon Butonları
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Row(
+                children: [
+                  // --- Paylaş ---
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _shareImage(apod),
+                      icon: const Icon(Icons.share_rounded, size: 20),
+                      label: const Text('Paylaş'),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // --- İndir ---
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _downloadImage(apod),
+                      icon: const Icon(Icons.download_rounded, size: 20),
+                      label: const Text('Download'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

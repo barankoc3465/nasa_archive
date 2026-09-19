@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:nasa_uzay_yolu/core/theme/app_theme.dart';
 import 'package:nasa_uzay_yolu/screens/main_screen.dart';
 
 Future<void> main() async {
@@ -16,7 +17,7 @@ class NasaApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Uzay Fotoğrafları',
-      theme: ThemeData.dark(), // Koyu tema uzay konseptine çok yakışır
+      theme: AppTheme.dark,
       home: const MainScreen(), // Uygulama direkt bu ekranla başlayacak
     );
   }
