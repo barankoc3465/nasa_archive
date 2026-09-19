@@ -24,26 +24,25 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String _currentQuery = 'galaxy';
-
   final List<Map<String, String>> _categories = [
-    {'label': 'Galaksi', 'query': 'galaxy'},
+    {'label': 'Galaxy', 'query': 'galaxy'},
     {'label': 'Nebula', 'query': 'nebula'},
-    {'label': 'Jüpiter', 'query': 'jupiter'},
-    {'label': 'Satürn', 'query': 'saturn'},
-    {'label': 'Uranüs', 'query': 'uranus'},
-    {'label': 'Neptün', 'query': 'neptune'},
-    {'label': 'Ay', 'query': 'moon'},
-    {'label': 'Güneş', 'query': 'sun'},
-    {'label': 'Yıldız', 'query': 'star'},
-    {'label': 'Gezegen', 'query': 'planet'},
-    {'label': 'Asteroit', 'query': 'asteroid'},
-    {'label': 'Kuyruklu Yıldız', 'query': 'comet'},
-    {'label': 'Uzay Mekiği', 'query': 'space shuttle'},
+    {'label': 'Jupiter', 'query': 'jupiter'},
+    {'label': 'Saturn', 'query': 'saturn'},
+    {'label': 'Uranus', 'query': 'uranus'},
+    {'label': 'Neptune', 'query': 'neptune'},
+    {'label': 'Moon', 'query': 'moon'},
+    {'label': 'Sun', 'query': 'sun'},
+    {'label': 'Star', 'query': 'star'},
+    {'label': 'Planet', 'query': 'planet'},
+    {'label': 'Asteroid', 'query': 'asteroid'},
+    {'label': 'Comet', 'query': 'comet'},
+    {'label': 'Space Shuttle', 'query': 'space shuttle'},
     {
-      'label': 'Uluslararası Uzay İstasyonu',
+      'label': 'International Space Station',
       'query': 'international space station',
     },
-    {'label': 'Kara Delik', 'query': 'black hole'},
+    {'label': 'Black Hole', 'query': 'black hole'},
   ];
 
   @override
