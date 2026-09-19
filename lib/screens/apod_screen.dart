@@ -23,6 +23,7 @@ class _ApodScreenState extends State<ApodScreen> {
   final NasaApiService _apiService = NasaApiService();
   ApodModel? _apodData;
   bool _isLoading = true;
+  bool _isDownloading = false;
   String? _errorMessage;
 
   @override
@@ -31,13 +32,13 @@ class _ApodScreenState extends State<ApodScreen> {
     _loadApodData();
   }
 
-  Future<void> _loadApodData() async {
+  Future<void> _loadApodData({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final apod = await _apiService.fetchApod();
+    final apod = await _apiService.fetchApod(forceRefresh: forceRefresh);
 
     if (!mounted) return;
 
@@ -81,9 +82,14 @@ class _ApodScreenState extends State<ApodScreen> {
   }
 
   Future<void> _downloadImage(ApodModel apod) async {
+    if (_isDownloading) return;
+    setState(() => _isDownloading = true);
     try {
       if (!await Gal.hasAccess()) {
         await Gal.requestAccess();
+      }
+      if (!await Gal.hasAccess()) {
+        throw Exception('Galeri izni verilmedi.');
       }
 
       final tempDir = await getTemporaryDirectory();
@@ -91,7 +97,13 @@ class _ApodScreenState extends State<ApodScreen> {
       final filePath =
           '${tempDir.path}/apod_${DateTime.now().millisecondsSinceEpoch}.$extension';
 
-      await Dio().download(apod.url, filePath);
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+      await dio.download(apod.url, filePath);
       await Gal.putImage(filePath, album: 'NASA Uzay Galerisi');
 
       final file = File(filePath);
@@ -112,6 +124,8 @@ class _ApodScreenState extends State<ApodScreen> {
           backgroundColor: AppColors.coral,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isDownloading = false);
     }
   }
 
@@ -162,7 +176,7 @@ class _ApodScreenState extends State<ApodScreen> {
 
   Widget _buildContent(ApodModel apod) {
     return RefreshIndicator(
-      onRefresh: _loadApodData,
+      onRefresh: () => _loadApodData(forceRefresh: true),
       color: AppColors.cream,
       backgroundColor: AppColors.panel,
       child: SingleChildScrollView(
@@ -281,9 +295,19 @@ class _ApodScreenState extends State<ApodScreen> {
                   // --- İndir ---
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _downloadImage(apod),
-                      icon: const Icon(Icons.download_rounded, size: 20),
-                      label: const Text('Download'),
+                      onPressed: _isDownloading
+                          ? null
+                          : () => _downloadImage(apod),
+                      icon: _isDownloading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_rounded, size: 20),
+                      label: Text(
+                        _isDownloading ? 'Downloading...' : 'Download',
+                      ),
                     ),
                   ),
                 ],

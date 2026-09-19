@@ -20,10 +20,12 @@ class SpaceGalleryScreen extends StatefulWidget {
 }
 
 class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
+  final NasaApiService _apiService = NasaApiService();
   List<SpaceImage> _images = [];
   bool _isLoading = true;
   String? _errorMessage;
   String _currentQuery = 'galaxy';
+  int _requestVersion = 0;
   final List<Map<String, String>> _categories = [
     {'label': 'Galaxy', 'query': 'galaxy'},
     {'label': 'Nebula', 'query': 'nebula'},
@@ -52,6 +54,7 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
   }
 
   Future<void> _fetchImages(String query) async {
+    final requestVersion = ++_requestVersion;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -59,10 +62,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       _images = [];
     });
 
-    final service = NasaApiService();
-    final images = await service.searchSpaceImages(query);
+    final images = await _apiService.searchSpaceImages(query);
 
-    if (!mounted) return;
+    if (!mounted || requestVersion != _requestVersion) return;
 
     setState(() {
       _images = images;
@@ -111,6 +113,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       if (!await Gal.hasAccess()) {
         await Gal.requestAccess();
       }
+      if (!await Gal.hasAccess()) {
+        throw Exception('Galeri izni verilmedi.');
+      }
 
       // 2) Geçici klasöre indir
       final tempDir = await getTemporaryDirectory();
@@ -120,6 +125,8 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
       final filePath = '${tempDir.path}/$fileName';
 
       final dio = Dio();
+      dio.options.connectTimeout = const Duration(seconds: 10);
+      dio.options.receiveTimeout = const Duration(seconds: 30);
       await dio.download(image.imageUrl, filePath);
 
       // 3) Galeriye kaydet
