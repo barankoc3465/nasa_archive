@@ -185,6 +185,9 @@ class _ApodScreenState extends State<ApodScreen> {
                     maxScale: 3.0,
                     child: CachedNetworkImage(
                       imageUrl: apod.url,
+                      cacheKey: 'apod_${apod.date}_${apod.url}',
+                      memCacheWidth: 1080,
+                      maxWidthDiskCache: 1080,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(

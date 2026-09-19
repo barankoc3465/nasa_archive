@@ -233,6 +233,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
               tag: image.id,
               child: CachedNetworkImage(
                 imageUrl: image.imageUrl,
+                cacheKey: image.id,
+                memCacheWidth: 540,
+                maxWidthDiskCache: 540,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: AppColors.panel,
@@ -290,6 +293,9 @@ class _SpaceGalleryScreenState extends State<SpaceGalleryScreen> {
                         tag: image.id,
                         child: CachedNetworkImage(
                           imageUrl: image.imageUrl,
+                          cacheKey: image.id,
+                          memCacheWidth: 1080,
+                          maxWidthDiskCache: 1080,
                           fit: BoxFit.contain,
                           placeholder: (context, url) => Container(
                             color: AppColors.panel,
