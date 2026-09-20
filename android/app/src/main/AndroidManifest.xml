@@ -16,7 +16,7 @@
     </intent>
 </queries>
     <application
-        android:label="nasa_uzay_yolu"
+        android:label="nasa_archive"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

@@ -1,4 +1,4 @@
-package com.example.nasa_uzay_yolu
+package com.example.nasa_archive
 
 import io.flutter.embedding.android.FlutterActivity
 
