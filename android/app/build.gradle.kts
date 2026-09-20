@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.nasa_uzay_yolu"
+    namespace = "com.example.nasa_archive"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
