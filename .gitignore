@@ -50,3 +50,7 @@ app.*.map.json
 # Ortam değişkenleri
 .env
 .env.local
+
+
+key.properties
+*.jks
